@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  parquet-importer:
+    build: .
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_REGION=${AWS_REGION}
+      - PORT=3001
+      - HOSTNAME=0.0.0.0
+      - SNS_TOPIC_ARN=${SNS_TOPIC_ARN}
+      - NGROK_URL=${NGROK_URL}
+      - CLICKHOUSE_URL=${CLICKHOUSE_URL}
+      - CLICKHOUSE_USER=${CLICKHOUSE_USER}
+      - CLICKHOUSE_PASSWORD=${CLICKHOUSE_PASSWORD}
+      - CLICKHOUSE_DATABASE=${CLICKHOUSE_DATABASE}
+    volumes:
+      - /tmp/parquet-importer:/tmp/parquet-importer
+    restart: unless-stopped

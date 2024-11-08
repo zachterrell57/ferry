@@ -1,7 +1,7 @@
 import type { Job } from "bullmq";
 import { Queue, Worker } from "bullmq";
-import logger from "./logger";
-import { processParquetFile } from "./server";
+import { processParquetFile } from ".";
+import logger from "./utils/logger";
 
 interface ParquetJob {
   key: string;
@@ -25,6 +25,14 @@ export const jobQueue = new Queue<ParquetJob>("parquet-processing", {
   },
 });
 
+jobQueue.on("error", (error) => {
+  if (error.message.includes("ECONNREFUSED") || error.message.includes("Connection is closed")) {
+    logger.error("Redis connection error. Is Redis running?");
+  } else {
+    logger.error(error);
+  }
+});
+
 const worker = new Worker<ParquetJob>(
   "parquet-processing",
   async (job: Job<ParquetJob>) => {
@@ -44,4 +52,12 @@ worker.on("completed", (job: Job<ParquetJob>) => {
 
 worker.on("failed", (job: Job<ParquetJob> | undefined, err: Error) => {
   logger.error(`Failed processing ${job?.data.key}:`, err);
+});
+
+worker.on("error", (error) => {
+  if (error.message.includes("ECONNREFUSED") || error.message.includes("Connection is closed")) {
+    logger.error("Redis connection error. Is Redis running?");
+  } else {
+    logger.error(error);
+  }
 });
